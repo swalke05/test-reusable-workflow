@@ -1,0 +1,27 @@
+name: reusable
+
+on:
+  workflow_call:
+    secrets: inherit
+  
+jobs:
+  reusable_workflow_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log GitHub context
+        id: github_context_step
+        run: echo '${{ toJSON(github) }}'
+      - name: Log job context
+        run: echo '${{ toJSON(job) }}'
+      - name: Check user permission
+        id: check
+        uses: scherermichael-oss/action-has-permission@master
+        with:
+          required-permission: admin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Exit if user does not have admin role
+        if: "! steps.check.outputs.has-permission"
+        run: |
+          echo "::error::The requesting user's permissions for this repo are insufficient for releasing." && exit 1
